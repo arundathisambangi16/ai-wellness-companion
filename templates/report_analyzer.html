@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Report Analyzer{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="dashboard-header">
+                <div>
+                    <div class="badge">Report intelligence</div>
+                    <h1>OCR-Based Health Report Analyzer</h1>
+                    <p>Upload a body composition, smart-scale, or health summary and turn it into structured wellness data.</p>
+                </div>
+                <div><span class="badge">Local OCR</span></div>
+            </div>
+        </div>
+
+        <div class="grid-2-top">
+            <div class="card">
+                <h2>Upload Report Image or Paste Text</h2>
+                <div class="upload-box">
+                    <form method="post" action="/report-analyzer" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label>Report Type</label>
+                            <select name="report_type">
+                                <option value="body_composition">Body Composition</option>
+                                <option value="scale_screen">Smart Scale Screen</option>
+                                <option value="lab_summary">Lab Summary</option>
+                                <option value="other">Other Health Report</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Choose Image</label>
+                            <input type="file" name="report_file" accept=".png,.jpg,.jpeg,.webp">
+                        </div>
+                        <div class="form-group">
+                            <label>Or Paste Report Text</label>
+                            <textarea name="report_text" rows="8" placeholder="Paste the OCR text or report text here if you do not have an image file."></textarea>
+                        </div>
+                        <p class="small-muted">Recommended: a clear, high-contrast image with readable values. If OCR is unavailable, paste the report text instead.</p>
+                        <button class="btn" type="submit">Upload and Extract</button>
+                    </form>
+                </div>
+
+                {% if success %}
+                <p class="success-message" style="margin-top: 14px;">{{ success }}</p>
+                {% endif %}
+                {% if error %}
+                <p class="error-message" style="margin-top: 14px;">{{ error }}</p>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h2>What This Step Extracts</h2>
+                <ul class="insight-list">
+                    <li>Weight</li>
+                    <li>BMI</li>
+                    <li>Body Fat %</li>
+                    <li>Muscle Mass</li>
+                    <li>Body Water %</li>
+                    <li>Visceral Fat</li>
+                    <li>BMR / Metabolic Rate</li>
+                </ul>
+                <p class="small-muted">No API key is required for this step. OCR runs locally on your own machine with Tesseract.</p>
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 20px;">
+            <div class="card">
+                <h2>Latest Processed Report</h2>
+                {% if latest_report %}
+                    <p><strong>File:</strong> {{ latest_report.file_name }}</p>
+                    <p><strong>Type:</strong> {{ latest_report.report_type or '-' }}</p>
+                    <p><strong>Status:</strong>
+                        <span class="badge {% if latest_report.processing_status == 'processed' %}status-ok{% elif latest_report.processing_status == 'failed' %}status-failed{% endif %}">
+                            {{ latest_report.processing_status or 'pending' }}
+                        </span>
+                    </p>
+                    <p><strong>Uploaded:</strong> {{ latest_report.upload_date }}</p>
+                    {% if latest_report.metrics %}
+                    <div class="metric-grid">
+                        {% for metric in latest_report.metrics %}
+                        <div class="metric-card">
+                            <h4>{{ metric.metric_name }}</h4>
+                            <p>{{ metric.metric_value }}{% if metric.metric_unit and metric.metric_unit != 'score' %} {{ metric.metric_unit }}{% endif %}</p>
+                            <div class="small-muted">Matched from: {{ metric.extracted_text }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p>No metrics extracted yet from the latest report.</p>
+                    {% endif %}
+                {% else %}
+                    <p>No report has been uploaded yet.</p>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h2>OCR Raw Text Preview</h2>
+                {% if latest_report and latest_report.ocr_raw_text %}
+                    <div class="report-text-preview">{{ latest_report.ocr_raw_text }}</div>
+                {% else %}
+                    <p>Raw OCR output will appear here after a report is processed.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>Recent Uploaded Reports</h2>
+            {% if recent_reports %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Uploaded</th>
+                                <th>File</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Metrics Found</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in recent_reports %}
+                            <tr>
+                                <td>{{ report.upload_date }}</td>
+                                <td>{{ report.file_name }}</td>
+                                <td>{{ report.report_type or '-' }}</td>
+                                <td>{{ report.processing_status or '-' }}</td>
+                                <td>{{ report.metric_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No reports uploaded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Wellness Coach{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="dashboard-header">
+                <div>
+                    <div class="badge">Conversational coach</div>
+                    <h1>Wellness Coach</h1>
+                    <p>Chat with your wellness assistant about sleep, hydration, habits, reports, or recovery planning.</p>
+                </div>
+                <form method="post" action="/coach/new" class="coach-new-session-form">
+                    <button class="btn" type="submit">New Chat</button>
+                </form>
+            </div>
+        </div>
+
+        {% if success %}
+        <div class="message success">{{ success }}</div>
+        {% endif %}
+        {% if error %}
+        <div class="message error">{{ error }}</div>
+        {% endif %}
+
+        <div class="coach-layout" id="coach-page" data-active-session-id="{{ active_session.id }}">
+            <aside class="card coach-sidebar">
+                <h2>Recent Sessions</h2>
+                {% if sessions %}
+                    <div class="session-list" id="coach-session-list">
+                        {% for session in sessions %}
+                        <a
+                            class="session-item {% if active_session and session.id == active_session.id %}active{% endif %}"
+                            href="/coach?session_id={{ session.id }}"
+                            data-session-id="{{ session.id }}"
+                        >
+                            <strong>{{ session.session_title or "Wellness Coach" }}</strong>
+                            <span>{{ session.message_count or 0 }} message(s)</span>
+                            {% if session.last_message_at %}
+                            <small>Updated {{ session.last_message_at }}</small>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="small-muted">Your first chat session will appear here automatically.</p>
+                {% endif %}
+
+                <div class="coach-context">
+                    <h3>Ask About</h3>
+                    <ul class="insight-list">
+                        <li>How your latest score can improve</li>
+                        <li>What to do about low sleep or hydration</li>
+                        <li>Which habit to focus on today</li>
+                        <li>How your uploaded report should guide recovery</li>
+                    </ul>
+                </div>
+            </aside>
+
+            <div class="card coach-thread">
+                <div class="coach-thread-header">
+                    <div>
+                        <h2 id="coach-thread-title">{{ active_session.session_title or "Wellness Coach" }}</h2>
+                        <p class="small-muted" id="coach-thread-subtitle">This assistant uses your local profile, logs, habits, reports, and recovery plan.</p>
+                    </div>
+                    <div class="coach-status-pill">
+                        <span class="coach-status-dot"></span>
+                        Data-aware and live
+                    </div>
+                </div>
+
+                <div class="coach-quick-grid" aria-label="Quick prompts">
+                    <button class="coach-quick-btn" type="button" data-coach-prompt="How is my sleep based on my latest data?">Sleep</button>
+                    <button class="coach-quick-btn" type="button" data-coach-prompt="How is my hydration compared with my goal?">Hydration</button>
+                    <button class="coach-quick-btn" type="button" data-coach-prompt="What should I improve most today based on my wellness score?">Focus today</button>
+                    <button class="coach-quick-btn" type="button" data-coach-prompt="What do my latest report metrics mean for my wellness plan?">Report analysis</button>
+                    <button class="coach-quick-btn" type="button" data-coach-prompt="Build me a recovery plan for today using my recent history.">Recovery plan</button>
+                    <button class="coach-quick-btn" type="button" data-coach-prompt="How is my heart health from the wellness data you have?">Heart health</button>
+                </div>
+
+                <div class="chat-log" id="coach-chat-log">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <article class="chat-bubble {% if message.sender_type == 'assistant' %}assistant{% else %}user{% endif %}">
+                            <div class="chat-meta">
+                                <strong>{{ "Coach" if message.sender_type == "assistant" else user.full_name }}</strong>
+                                <span>{{ message.created_at }}</span>
+                            </div>
+                            <p>{{ message.message_text }}</p>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <h3>Start the conversation</h3>
+                            <p>Tell the coach what you want help with, such as sleep, exercise, habits, or recovery planning.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <form method="post" action="/coach" class="coach-form" id="coach-form">
+                    <input type="hidden" name="session_id" id="coach-session-id" value="{{ active_session.id }}">
+                    <div class="form-group">
+                        <label>Your Message</label>
+                        <textarea name="message_text" id="coach-message-input" rows="4" placeholder="Ask your wellness coach anything..."></textarea>
+                    </div>
+                    <div class="coach-actions">
+                        <button class="btn" type="submit">Send</button>
+                        <a class="btn secondary" href="/dashboard">Back to Dashboard</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

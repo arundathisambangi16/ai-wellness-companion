@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}AI Wellness Companion — Your Personal Health Intelligence Platform{% endblock %}
+{% block content %}
+
+<section class="home-hero">
+    <div class="container">
+        <div class="hero-badge">✨ Powered by OpenAI + Local Intelligence</div>
+        <h1 class="hero-title">Your Personal<br><span class="gradient-text">Wellness Intelligence</span><br>Platform</h1>
+        <p class="hero-subtitle">Track sleep, hydration, habits, and body metrics. Get AI coaching, OCR-based health report analysis, and personalized recovery plans — all in one beautiful interface.</p>
+        <div class="hero-ctas">
+            <a class="btn btn-lg" href="/register">🚀 Start Free Today</a>
+            <a class="btn secondary btn-lg" href="/login">Sign In</a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <strong>6</strong>
+                <span>Core Modules</span>
+            </div>
+            <div class="hero-stat">
+                <strong>AI</strong>
+                <span>Coach Powered</span>
+            </div>
+            <div class="hero-stat">
+                <strong>100%</strong>
+                <span>Your Data</span>
+            </div>
+            <div class="hero-stat">
+                <strong>PWA</strong>
+                <span>Mobile Ready</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-label">Everything you need</div>
+            <h2>Built for serious wellness tracking</h2>
+            <p>Every feature is designed to give you clear, actionable insights from your health data.</p>
+        </div>
+        <div class="features-grid">
+            <a class="feature-card" href="/register">
+                <div class="feature-icon">📊</div>
+                <h3>Smart Dashboard</h3>
+                <p>Wellness score, component breakdown, trend charts, and daily insights at a glance.</p>
+            </a>
+            <a class="feature-card" href="/register">
+                <div class="feature-icon">📝</div>
+                <h3>Daily Tracking</h3>
+                <p>Log sleep, water, steps, exercise, mood, and stress. Auto-calculates your wellness score.</p>
+            </a>
+            <a class="feature-card" href="/register">
+                <div class="feature-icon">🔥</div>
+                <h3>Habit Streaks</h3>
+                <p>Build and maintain daily habits with streak tracking and completion analytics.</p>
+            </a>
+            <a class="feature-card" href="/register">
+                <div class="feature-icon">🔬</div>
+                <h3>Report Analyzer</h3>
+                <p>Upload body composition or health reports. OCR extracts weight, BMI, muscle mass, and more.</p>
+            </a>
+            <a class="feature-card" href="/register">
+                <div class="feature-icon">💪</div>
+                <h3>Recovery Planner</h3>
+                <p>AI-generated daily recovery plans with sleep, water, exercise, and step targets.</p>
+            </a>
+            <a class="feature-card" href="/register">
+                <div class="feature-icon">🤖</div>
+                <h3>AI Wellness Coach</h3>
+                <p>Chat with an OpenAI-powered coach grounded in your actual wellness data and history.</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-card">
+            <div class="cta-content">
+                <h2>Ready to take control of your health?</h2>
+                <p>Join thousands tracking their wellness with AI-powered insights. Free to use, no credit card needed.</p>
+                <a class="btn btn-lg" href="/register">Create Your Free Account →</a>
+            </div>
+            <div class="cta-visual">
+                <div class="cta-score-ring">
+                    <svg viewBox="0 0 120 120" class="score-ring-svg">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(124,218,255,0.15)" stroke-width="8"/>
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="url(#ringGrad)" stroke-width="8"
+                            stroke-dasharray="251.2" stroke-dashoffset="75" stroke-linecap="round"
+                            transform="rotate(-90 60 60)"/>
+                        <defs>
+                            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#7cdaff"/>
+                                <stop offset="100%" stop-color="#59f0b6"/>
+                            </linearGradient>
+                        </defs>
+                        <text x="60" y="55" text-anchor="middle" fill="white" font-size="22" font-weight="800">82</text>
+                        <text x="60" y="72" text-anchor="middle" fill="#a8b4c7" font-size="9">WELLNESS</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

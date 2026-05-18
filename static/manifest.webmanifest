@@ -1,0 +1,17 @@
+{
+  "name": "AI Wellness Companion",
+  "short_name": "Wellness",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "description": "A premium wellness dashboard with tracking, coaching, and intelligent recovery planning.",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — AI Wellness Companion{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+
+        <!-- Header -->
+        <div class="card page-header-card" style="margin-bottom: 22px;">
+            <div class="dashboard-header">
+                <div>
+                    <div class="section-label">Command Center</div>
+                    <h1 style="margin:6px 0 8px;">Welcome back, {{ user.full_name.split()[0] }} 👋</h1>
+                    <p style="margin:0; color:var(--muted);">Here's your wellness overview for today.</p>
+                </div>
+                <div class="header-actions">
+                    <a class="btn" href="/daily-tracker">+ Log Today</a>
+                    <a class="btn secondary" href="/coach">🤖 Coach</a>
+                </div>
+            </div>
+            <div class="shortcut-grid" style="margin-top: 22px;">
+                <a class="shortcut-card" href="/twin-lab">
+                    <div class="shortcut-icon">Twin</div>
+                    <strong>Wellness Twin</strong>
+                    <span>Simulate what changes your score tomorrow</span>
+                </a>
+                <a class="shortcut-card" href="/autopilot">
+                    <div class="shortcut-icon">Auto</div>
+                    <strong>Autopilot</strong>
+                    <span>Get the single best action for your time budget</span>
+                </a>
+                <a class="shortcut-card" href="/daily-tracker">
+                    <div class="shortcut-icon">📝</div>
+                    <strong>Daily Log</strong>
+                    <span>Track sleep, water, steps & mood</span>
+                </a>
+                <a class="shortcut-card" href="/report-analyzer">
+                    <div class="shortcut-icon">🔬</div>
+                    <strong>Report Analyzer</strong>
+                    <span>Extract metrics from health reports</span>
+                </a>
+                <a class="shortcut-card" href="/recovery-planner">
+                    <div class="shortcut-icon">💪</div>
+                    <strong>Recovery Plan</strong>
+                    <span>Generate today's personalized plan</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI Row 1 -->
+        <div class="grid-4">
+            <div class="kpi">
+                <h3>Total Logs</h3>
+                <p class="kpi-value" data-count="{{ summary.total_logs or 0 }}">{{ summary.total_logs or 0 }}</p>
+            </div>
+            <div class="kpi">
+                <h3>Avg Sleep</h3>
+                <p>{% if summary.avg_sleep %}<span class="kpi-value">{{ summary.avg_sleep }}</span> hrs{% else %}<span class="kpi-na">—</span>{% endif %}</p>
+            </div>
+            <div class="kpi">
+                <h3>Avg Water</h3>
+                <p>{% if summary.avg_water %}<span class="kpi-value">{{ summary.avg_water }}</span> L{% else %}<span class="kpi-na">—</span>{% endif %}</p>
+            </div>
+            <div class="kpi">
+                <h3>Avg Steps</h3>
+                <p>{% if summary.avg_steps %}<span class="kpi-value">{{ summary.avg_steps|int }}</span>{% else %}<span class="kpi-na">—</span>{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- Score Row -->
+        <div class="grid-4" style="margin-top:18px;">
+            <div class="kpi kpi-accent">
+                <h3>Latest Score</h3>
+                <p>{% if latest_score %}<span class="kpi-value">{{ latest_score.total_score|round|int }}</span>/100{% else %}<span class="kpi-na">—</span>{% endif %}</p>
+            </div>
+            <div class="kpi">
+                <h3>Best Score</h3>
+                <p>{% if score_overview.best_score %}<span class="kpi-value">{{ score_overview.best_score|round|int }}</span>/100{% else %}<span class="kpi-na">—</span>{% endif %}</p>
+            </div>
+            <div class="kpi">
+                <h3>Avg Score</h3>
+                <p>{% if score_overview.avg_total_score %}<span class="kpi-value">{{ score_overview.avg_total_score|round|int }}</span>/100{% else %}<span class="kpi-na">—</span>{% endif %}</p>
+            </div>
+            <div class="kpi">
+                <h3>Trend</h3>
+                <p class="kpi-trend {% if score_overview.score_trend_label == 'Improving' %}trend-up{% elif score_overview.score_trend_label == 'Declining' %}trend-down{% endif %}">
+                    {{ score_overview.score_trend_label or '—' }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Main Score + Chart -->
+        <div class="grid-2-top" style="margin-top:18px;">
+            <div class="card">
+                <div class="section-label">Score history</div>
+                <h2>Wellness Score Trend</h2>
+                {% if score_history %}
+                <div class="chart-container">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+                <script>
+                window.__scoreHistory = {{ score_history | tojson }};
+                </script>
+                {% else %}
+                <div class="empty-state">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">📈</div>
+                    <h3>No data yet</h3>
+                    <p>Save your first daily log to start tracking your wellness score.</p>
+                    <a class="btn" href="/daily-tracker">Log Today</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card score-highlight">
+                <div class="section-label">Primary signal</div>
+                <h2>Latest Wellness Score</h2>
+                {% if latest_score %}
+                <!-- Score ring -->
+                <div class="score-ring-wrap">
+                    <svg viewBox="0 0 120 120" class="score-ring-svg">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(124,218,255,0.12)" stroke-width="8"/>
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="url(#scoreGrad)" stroke-width="8"
+                            stroke-dasharray="314.16"
+                            stroke-dashoffset="{{ 314.16 * (1 - latest_score.total_score / 100) | round(2) }}"
+                            stroke-linecap="round" transform="rotate(-90 60 60)" class="score-ring-progress"/>
+                        <defs>
+                            <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#7cdaff"/>
+                                <stop offset="100%" stop-color="#59f0b6"/>
+                            </linearGradient>
+                        </defs>
+                        <text x="60" y="57" text-anchor="middle" fill="white" font-size="24" font-weight="900">{{ latest_score.total_score|round|int }}</text>
+                        <text x="60" y="72" text-anchor="middle" fill="#a8b4c7" font-size="8.5" font-weight="700">SCORE</text>
+                    </svg>
+                </div>
+                <p style="margin:8px 0 14px; font-size:0.93rem;">{{ latest_score.explanation_summary }}</p>
+                <!-- Component bars -->
+                <div class="score-bars">
+                    <div class="score-bar-row"><span>Sleep</span><div class="score-bar"><div class="score-bar-fill" style="width:{{ latest_score.sleep_score|round|int }}%"></div></div><strong>{{ latest_score.sleep_score|round|int }}</strong></div>
+                    <div class="score-bar-row"><span>Hydration</span><div class="score-bar"><div class="score-bar-fill" style="width:{{ latest_score.hydration_score|round|int }}%; background: linear-gradient(90deg,#7cdaff,#59f0b6)"></div></div><strong>{{ latest_score.hydration_score|round|int }}</strong></div>
+                    <div class="score-bar-row"><span>Activity</span><div class="score-bar"><div class="score-bar-fill" style="width:{{ latest_score.activity_score|round|int }}%; background: linear-gradient(90deg,#8b7dff,#7cdaff)"></div></div><strong>{{ latest_score.activity_score|round|int }}</strong></div>
+                    <div class="score-bar-row"><span>Habits</span><div class="score-bar"><div class="score-bar-fill" style="width:{{ latest_score.habit_score|round|int }}%; background: linear-gradient(90deg,#ffcb6b,#ff9d6b)"></div></div><strong>{{ latest_score.habit_score|round|int }}</strong></div>
+                    <div class="score-bar-row"><span>Mood</span><div class="score-bar"><div class="score-bar-fill" style="width:{{ latest_score.mood_score|round|int }}%; background: linear-gradient(90deg,#ff7b8b,#ffcb6b)"></div></div><strong>{{ latest_score.mood_score|round|int }}</strong></div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">🎯</div>
+                    <p>No score yet. Save a daily log to generate your first wellness score.</p>
+                    <a class="btn" href="/daily-tracker">Create Log</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Habits + Today's Log -->
+        <div class="grid-4" style="margin-top:18px;">
+            <div class="kpi">
+                <h3>Active Habits</h3>
+                <p class="kpi-value" data-count="{{ habit_summary.total_active_habits or 0 }}">{{ habit_summary.total_active_habits or 0 }}</p>
+            </div>
+            <div class="kpi">
+                <h3>Completed</h3>
+                <p class="kpi-value" data-count="{{ habit_summary.total_completed_logs or 0 }}">{{ habit_summary.total_completed_logs or 0 }}</p>
+            </div>
+            <div class="kpi">
+                <h3>Missed</h3>
+                <p class="kpi-value" data-count="{{ habit_summary.total_missed_logs or 0 }}">{{ habit_summary.total_missed_logs or 0 }}</p>
+            </div>
+            <div class="kpi">
+                <h3>Today ✅</h3>
+                <p class="kpi-value" data-count="{{ habit_summary.today_completed_habits or 0 }}">{{ habit_summary.today_completed_habits or 0 }}</p>
+            </div>
+        </div>
+
+        <!-- Profile + Today's Log -->
+        <div class="grid-2" style="margin-top:18px;">
+            <div class="card">
+                <div class="section-label">Profile</div>
+                <h2>Your Profile</h2>
+                {% if profile %}
+                <div class="profile-grid">
+                    <div class="profile-item"><span>Age</span><strong>{{ profile.age or "—" }}</strong></div>
+                    <div class="profile-item"><span>Gender</span><strong>{{ profile.gender or "—" }}</strong></div>
+                    <div class="profile-item"><span>Height</span><strong>{% if profile.height_cm %}{{ profile.height_cm }} cm{% else %}—{% endif %}</strong></div>
+                    <div class="profile-item"><span>Weight</span><strong>{% if profile.weight_kg %}{{ profile.weight_kg }} kg{% else %}—{% endif %}</strong></div>
+                    <div class="profile-item"><span>Goal</span><strong>{{ profile.wellness_goal or "—" }}</strong></div>
+                    <div class="profile-item"><span>Sleep Goal</span><strong>{% if profile.sleep_goal_hours %}{{ profile.sleep_goal_hours }}h{% else %}—{% endif %}</strong></div>
+                </div>
+                <a class="btn secondary" href="/profile" style="margin-top:14px;">Edit Profile</a>
+                {% else %}
+                <div class="empty-state">
+                    <div style="font-size:2rem;margin-bottom:8px;">👤</div>
+                    <p>Complete your profile to get personalized insights.</p>
+                    <a class="btn" href="/profile">Set Up Profile</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <div class="section-label">Today</div>
+                <h2>Latest Daily Log</h2>
+                {% if latest_log %}
+                <div class="profile-grid">
+                    <div class="profile-item"><span>Date</span><strong>{{ latest_log.log_date }}</strong></div>
+                    <div class="profile-item"><span>Sleep</span><strong>{% if latest_log.sleep_hours %}{{ latest_log.sleep_hours }}h{% else %}—{% endif %}</strong></div>
+                    <div class="profile-item"><span>Water</span><strong>{% if latest_log.water_intake_liters %}{{ latest_log.water_intake_liters }}L{% else %}—{% endif %}</strong></div>
+                    <div class="profile-item"><span>Steps</span><strong>{{ latest_log.steps_count or "—" }}</strong></div>
+                    <div class="profile-item"><span>Exercise</span><strong>{% if latest_log.exercise_minutes %}{{ latest_log.exercise_minutes }}min{% else %}—{% endif %}</strong></div>
+                    <div class="profile-item"><span>Mood</span><strong>{{ latest_log.mood or "—" }}</strong></div>
+                </div>
+                <a class="btn secondary" href="/daily-tracker" style="margin-top:14px;">Update Log</a>
+                {% else %}
+                <div class="empty-state">
+                    <div style="font-size:2rem;margin-bottom:8px;">📝</div>
+                    <p>No log for today yet.</p>
+                    <a class="btn" href="/daily-tracker">Log Today</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        {% if latest_recommendations %}
+        <div class="card" style="margin-top:18px;">
+            <div class="section-label">AI Guidance</div>
+            <h2>Top Recommendations</h2>
+            <div class="rec-list">
+                {% for rec in latest_recommendations %}
+                <div class="rec-item rec-{{ rec.priority_level|lower }}">
+                    <div class="rec-badge">{{ rec.priority_level|title }}</div>
+                    <p>{{ rec.content }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Expandable: History -->
+        <details class="dashboard-details" style="margin-top:18px;">
+            <summary>
+                <span>📈 Score & Log History</span>
+                <span class="small-muted">Recent 7 days</span>
+            </summary>
+            <div class="details-body">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="section-label">Trend view</div>
+                        <h2>Score History</h2>
+                        {% if score_history %}
+                        <div class="table-wrapper">
+                            <table>
+                                <thead><tr><th>Date</th><th>Total</th><th>Sleep</th><th>Hydration</th><th>Activity</th><th>Mood</th></tr></thead>
+                                <tbody>
+                                    {% for item in score_history %}
+                                    <tr>
+                                        <td>{{ item.log_date }}</td>
+                                        <td><strong>{{ item.total_score|round|int }}</strong></td>
+                                        <td>{{ item.sleep_score|round|int }}</td>
+                                        <td>{{ item.hydration_score|round|int }}</td>
+                                        <td>{{ item.activity_score|round|int }}</td>
+                                        <td>{{ item.mood_score|round|int }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}<p>No history yet.</p>{% endif %}
+                    </div>
+                    <div class="card">
+                        <div class="section-label">Timeline</div>
+                        <h2>Daily Logs</h2>
+                        {% if recent_logs %}
+                        <div class="table-wrapper">
+                            <table>
+                                <thead><tr><th>Date</th><th>Sleep</th><th>Water</th><th>Steps</th><th>Mood</th></tr></thead>
+                                <tbody>
+                                    {% for log in recent_logs %}
+                                    <tr>
+                                        <td>{{ log.log_date }}</td>
+                                        <td>{{ log.sleep_hours or "—" }}</td>
+                                        <td>{{ log.water_intake_liters or "—" }}</td>
+                                        <td>{{ log.steps_count or "—" }}</td>
+                                        <td>{{ log.mood or "—" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}<p>No logs yet.</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Expandable: Recovery, Reports, Habits -->
+        <details class="dashboard-details" style="margin-top:14px;">
+            <summary>
+                <span>💪 Recovery, Reports & Habit Streaks</span>
+                <span class="small-muted">More details</span>
+            </summary>
+            <div class="details-body">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="section-label">Reports</div>
+                        <h2>Latest OCR Report</h2>
+                        {% if latest_report %}
+                            <p><strong>{{ latest_report.file_name }}</strong></p>
+                            <p class="small-muted">Type: {{ latest_report.report_type or '—' }} · Status: {{ latest_report.processing_status or '—' }}</p>
+                            {% if latest_report.metrics %}
+                            <div class="metric-grid">
+                                {% for metric in latest_report.metrics[:6] %}
+                                <div class="metric-card">
+                                    <h4>{{ metric.metric_name }}</h4>
+                                    <p>{{ metric.metric_value }}{% if metric.metric_unit and metric.metric_unit != 'score' %} {{ metric.metric_unit }}{% endif %}</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="empty-state"><div style="font-size:2rem;margin-bottom:8px;">🔬</div><p>No report uploaded yet.</p><a class="btn" href="/report-analyzer">Upload Report</a></div>
+                        {% endif %}
+                    </div>
+                    <div class="card">
+                        <div class="section-label">Recovery</div>
+                        <h2>Today's Recovery Plan</h2>
+                        {% if latest_recovery_plan %}
+                            <p class="small-muted">{{ latest_recovery_plan.plan_date }} — {{ latest_recovery_plan.generated_reason }}</p>
+                            <div class="grid-4" style="margin-top:12px;">
+                                <div class="kpi"><h3>Sleep</h3><p>{{ latest_recovery_plan.sleep_target_hours }}h</p></div>
+                                <div class="kpi"><h3>Water</h3><p>{{ latest_recovery_plan.water_target_liters }}L</p></div>
+                                <div class="kpi"><h3>Exercise</h3><p>{{ latest_recovery_plan.exercise_target_minutes }}m</p></div>
+                                <div class="kpi"><h3>Steps</h3><p>{{ latest_recovery_plan.steps_target }}</p></div>
+                            </div>
+                            {% if latest_recovery_plan.motivational_note %}<p style="margin-top:12px;font-style:italic;">"{{ latest_recovery_plan.motivational_note }}"</p>{% endif %}
+                        {% else %}
+                            <div class="empty-state"><div style="font-size:2rem;margin-bottom:8px;">💪</div><p>No plan generated yet.</p><a class="btn" href="/recovery-planner">Generate Plan</a></div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if habit_streaks %}
+                <div class="card" style="margin-top:18px;">
+                    <div class="section-label">Habit trends</div>
+                    <h2>Habit Streaks</h2>
+                    <div class="streak-grid">
+                        {% for item in habit_streaks %}
+                        <div class="streak-item">
+                            <div class="streak-flame">🔥</div>
+                            <strong>{{ item.streak }}</strong>
+                            <span>{{ item.habit_name }}</span>
+                            {% if item.category %}<small>{{ item.category }}</small>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </details>
+
+    </div>
+</section>
+{% endblock %}

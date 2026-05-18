@@ -1,0 +1,31 @@
+
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container" style="max-width: 680px;">
+        <div class="card">
+            <div class="badge">Secure access</div>
+            <h1>Login</h1>
+            <p>Return to your wellness workspace and pick up right where you left off.</p>
+
+            {% if error %}
+                <div class="message error">{{ error }}</div>
+            {% endif %}
+
+            <form method="post" action="/login">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button class="btn" type="submit">Login</button>
+            </form>
+            <p style="margin-top: 16px;">New user? <a href="/register">Create your account</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

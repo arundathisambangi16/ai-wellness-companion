@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Wellness Autopilot - AI Wellness Companion{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container autopilot-shell" id="autopilot-page">
+        <script>
+            window.__autopilotPayload = {{ autopilot_payload | tojson }};
+        </script>
+
+        <div class="card autopilot-hero">
+            <div>
+                <div class="section-label">Wellness Autopilot</div>
+                <h1>One action. One time budget. One better day.</h1>
+                <p class="lead">
+                    The app only turns this on after one week of tracking. Before that, it stays locked so the recommendation engine does not make decisions on weak evidence.
+                </p>
+                {% if not autopilot_payload.is_ready %}
+                <div class="lock-callout">
+                    <strong>Locked until 7 days of tracking are available.</strong>
+                    <p>{{ autopilot_payload.lock_message }}</p>
+                    <div class="lock-progress">
+                        <div class="lock-progress-bar" style="width: {{ autopilot_payload.snapshot.tracking_progress_pct|round|int }}%;"></div>
+                    </div>
+                    <span class="small-muted">{{ autopilot_payload.snapshot.tracking_days }} / {{ autopilot_payload.snapshot.days_required }} tracking days completed</span>
+                </div>
+                {% endif %}
+                <div class="autopilot-badges">
+                    <span class="autopilot-badge">Priority: <strong id="auto-priority">{% if autopilot_payload.is_ready %}{{ autopilot_payload.priority.label }}{% else %}Locked{% endif %}</strong></span>
+                    <span class="autopilot-badge">Confidence: <strong id="auto-confidence">{% if autopilot_payload.is_ready %}{{ autopilot_payload.confidence|round|int }}%{% else %}Locked{% endif %}</strong></span>
+                    <span class="autopilot-badge">Time budget: <strong id="auto-time-budget">{{ autopilot_payload.controls.time_budget_minutes }} min</strong></span>
+                </div>
+            </div>
+            <div class="autopilot-score-card">
+                <div class="score-ring-wrap autopilot-score-ring">
+                    <svg viewBox="0 0 120 120" class="score-ring-svg">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(124,218,255,0.12)" stroke-width="8"></circle>
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="url(#autoGrad)" stroke-width="8"
+                            stroke-dasharray="314.16"
+                            stroke-dashoffset="{% if autopilot_payload.is_ready %}{{ 314.16 * (1 - autopilot_payload.plan.projected_score / 100) | round(2) }}{% else %}314.16{% endif %}"
+                            stroke-linecap="round" transform="rotate(-90 60 60)" class="score-ring-progress"></circle>
+                        <defs>
+                            <linearGradient id="autoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#7cdaff"></stop>
+                                <stop offset="100%" stop-color="#59f0b6"></stop>
+                            </linearGradient>
+                        </defs>
+                        <text x="60" y="57" text-anchor="middle" fill="white" font-size="24" font-weight="900" id="auto-score">{% if autopilot_payload.is_ready %}{{ autopilot_payload.plan.projected_score|round|int }}{% else %}--{% endif %}</text>
+                        <text x="60" y="72" text-anchor="middle" fill="#a8b4c7" font-size="8.5" font-weight="700">PROJECTED</text>
+                    </svg>
+                </div>
+                <div class="autopilot-score-meta">
+                    <span>Current: <strong id="auto-current-score">{{ autopilot_payload.snapshot.latest_score.total_score|round|int }}</strong></span>
+                    <span>Best lift: <strong id="auto-lift">{% if autopilot_payload.is_ready %}+{{ autopilot_payload.plan.expected_lift|round(1) }}{% else %}Locked{% endif %}</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="autopilot-grid">
+            <div class="card autopilot-controls-card">
+                <div class="section-label">Decision controls</div>
+                <h2>How much room do you have right now?</h2>
+                <p class="small-muted">Move the controls and the engine recalculates the strongest possible next action.</p>
+                {% if not autopilot_payload.is_ready %}
+                <div class="lock-banner">The recommendation engine stays disabled until the one-week baseline is complete.</div>
+                {% endif %}
+
+                <div class="autopilot-controls">
+                    <label class="autopilot-control">
+                        <div class="autopilot-control-head">
+                            <span>Time budget</span>
+                            <strong data-auto-value="time_budget_minutes">{{ autopilot_payload.controls.time_budget_minutes }} min</strong>
+                        </div>
+                        <input type="range" min="5" max="60" step="5" value="{{ autopilot_payload.controls.time_budget_minutes }}" data-auto-control="time_budget_minutes" {% if not autopilot_payload.is_ready %}disabled{% endif %}>
+                    </label>
+
+                    <div class="autopilot-mode-row" role="tablist" aria-label="Autopilot mode">
+                        <button type="button" class="autopilot-mode active" data-auto-mode="optimize" {% if not autopilot_payload.is_ready %}disabled{% endif %}>Optimize</button>
+                        <button type="button" class="autopilot-mode" data-auto-mode="protect" {% if not autopilot_payload.is_ready %}disabled{% endif %}>Protect</button>
+                        <button type="button" class="autopilot-mode" data-auto-mode="push" {% if not autopilot_payload.is_ready %}disabled{% endif %}>Push</button>
+                    </div>
+
+                    <div class="autopilot-energy-row" role="tablist" aria-label="Energy level">
+                        <button type="button" class="autopilot-energy active" data-auto-energy="medium" {% if not autopilot_payload.is_ready %}disabled{% endif %}>Medium energy</button>
+                        <button type="button" class="autopilot-energy" data-auto-energy="low" {% if not autopilot_payload.is_ready %}disabled{% endif %}>Low energy</button>
+                        <button type="button" class="autopilot-energy" data-auto-energy="high" {% if not autopilot_payload.is_ready %}disabled{% endif %}>High energy</button>
+                    </div>
+
+                    <div class="autopilot-actions">
+                        <button class="btn" type="button" id="auto-refresh" {% if not autopilot_payload.is_ready %}disabled{% endif %}>Recompute</button>
+                        <span class="small-muted" id="auto-status">{% if autopilot_payload.is_ready %}Ready to choose your best move{% else %}Locked until 7 days of tracking{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card autopilot-results-card">
+                <div class="section-label">Next best action</div>
+                <h2 id="auto-action-title">{% if autopilot_payload.is_ready %}{{ autopilot_payload.plan.action_title }}{% else %}Locked until baseline is ready{% endif %}</h2>
+                {% if autopilot_payload.is_ready %}
+                <div class="autopilot-metric-grid">
+                    <div class="autopilot-metric">
+                        <span>Expected lift</span>
+                        <strong id="auto-expected-lift">+{{ autopilot_payload.plan.expected_lift|round(1) }}</strong>
+                    </div>
+                    <div class="autopilot-metric">
+                        <span>Time needed</span>
+                        <strong id="auto-time-needed">{{ autopilot_payload.plan.time_budget_minutes }} min</strong>
+                    </div>
+                    <div class="autopilot-metric">
+                        <span>Priority</span>
+                        <strong id="auto-priority-2">{{ autopilot_payload.priority.label }}</strong>
+                    </div>
+                    <div class="autopilot-metric">
+                        <span>After action</span>
+                        <strong id="auto-after-score">{{ autopilot_payload.plan.projected_score|round|int }}</strong>
+                    </div>
+                </div>
+
+                <div class="autopilot-step-card">
+                    <div class="section-label">Do this now</div>
+                    <ol id="auto-steps">
+                        {% for step in autopilot_payload.plan.action_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ol>
+                </div>
+
+                <div class="autopilot-contracts">
+                    <div class="autopilot-contract">
+                        <span>Do not</span>
+                        <strong id="auto-do-not">{{ autopilot_payload.plan.do_not }}</strong>
+                    </div>
+                    <div class="autopilot-contract">
+                        <span>Why this wins</span>
+                        <strong id="auto-payoff">{{ autopilot_payload.plan.payoff }}</strong>
+                    </div>
+                    <div class="autopilot-contract">
+                        <span>Commitment</span>
+                        <strong id="auto-contract">{{ autopilot_payload.plan.micro_contract }}</strong>
+                    </div>
+                </div>
+                {% else %}
+                <div class="autopilot-locked-state">
+                    <strong>Not enough history yet.</strong>
+                    <p>Autopilot waits for a one-week baseline before making recommendations.</p>
+                    <div class="autopilot-locked-metrics">
+                        <div><span>Completed days</span><strong>{{ autopilot_payload.snapshot.tracking_days }}</strong></div>
+                        <div><span>Required days</span><strong>{{ autopilot_payload.snapshot.days_required }}</strong></div>
+                        <div><span>Progress</span><strong>{{ autopilot_payload.snapshot.tracking_progress_pct|round|int }}%</strong></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:18px;">
+            <div class="card">
+                <div class="section-label">Counterfactuals</div>
+                <h2>What happens if you do it, or skip it?</h2>
+                {% if autopilot_payload.is_ready %}
+                <div class="autopilot-forecast" id="auto-forecast">
+                    {% for point in autopilot_payload.forecast %}
+                    <div class="autopilot-forecast-row">
+                        <span class="autopilot-forecast-label">{{ point.label }}</span>
+                        <div class="autopilot-forecast-bars">
+                            <div class="autopilot-forecast-line baseline">
+                                <span>Baseline</span>
+                                <strong>{{ point.baseline|round|int }}</strong>
+                            </div>
+                            <div class="autopilot-forecast-line action">
+                                <span>Do it</span>
+                                <strong>{{ point.after_action|round|int }}</strong>
+                            </div>
+                            <div class="autopilot-forecast-line skip">
+                                <span>Skip it</span>
+                                <strong>{{ point.after_skip|round|int }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="autopilot-locked-curve">
+                    <p>The counterfactual forecast appears after the baseline is complete.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <div class="section-label">Why now</div>
+                <h2>The logic behind the choice</h2>
+                {% if autopilot_payload.is_ready %}
+                <div class="autopilot-insight-grid" id="auto-insights">
+                    <div class="autopilot-insight-card">
+                        <span>Why now</span>
+                        <strong id="auto-why-now">{{ autopilot_payload.reasoning.why_now }}</strong>
+                    </div>
+                    <div class="autopilot-insight-card">
+                        <span>Why this</span>
+                        <strong id="auto-why-this">{{ autopilot_payload.reasoning.why_this }}</strong>
+                    </div>
+                    <div class="autopilot-insight-card">
+                        <span>Why not other things</span>
+                        <strong id="auto-why-not">{{ autopilot_payload.reasoning.why_not_other_things }}</strong>
+                    </div>
+                    <div class="autopilot-insight-card">
+                        <span>Coach line</span>
+                        <strong id="auto-narrative">{{ autopilot_payload.narrative }}</strong>
+                    </div>
+                </div>
+                {% else %}
+                <div class="autopilot-locked-state">
+                    <p>The reasoning layer will appear after enough daily logs exist to make the recommendation trustworthy.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">AI Wellness Companion</title>
+  <desc id="desc">A stylized wellness orb icon with glowing gradients.</desc>
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7cdaff"/>
+      <stop offset="55%" stop-color="#8b7dff"/>
+      <stop offset="100%" stop-color="#59f0b6"/>
+    </linearGradient>
+    <radialGradient id="g2" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#d5f6ff" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#0a1324" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#07111f"/>
+  <circle cx="128" cy="128" r="86" fill="url(#g1)" opacity="0.92"/>
+  <circle cx="128" cy="112" r="62" fill="url(#g2)"/>
+  <path d="M128 64c16 0 29 13 29 29 0 10-5 18-12 24 15 4 27 19 27 36 0 22-18 40-40 40s-40-18-40-40c0-17 12-32 27-36-7-6-12-14-12-24 0-16 13-29 29-29zm0 15c-8 0-14 6-14 14s6 14 14 14 14-6 14-14-6-14-14-14zm0 58c-14 0-25 11-25 25s11 25 25 25 25-11 25-25-11-25-25-25z" fill="#07111f" fill-opacity="0.38"/>
+</svg>

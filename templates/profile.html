@@ -1,0 +1,84 @@
+
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="card">
+            <div class="badge">Personalization layer</div>
+            <h1>Profile Setup</h1>
+            <p>Define the inputs that drive your goals, targets, and future recommendations.</p>
+
+            {% if success %}
+                <div class="message success">{{ success }}</div>
+            {% endif %}
+
+            <form method="post" action="/profile">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" name="age" value="{{ profile.age if profile else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select name="gender">
+                            <option value="">Select</option>
+                            <option value="Female" {% if profile and profile.gender == 'Female' %}selected{% endif %}>Female</option>
+                            <option value="Male" {% if profile and profile.gender == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Other" {% if profile and profile.gender == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Height (cm)</label>
+                        <input type="number" step="0.1" name="height_cm" value="{{ profile.height_cm if profile else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Current Weight (kg)</label>
+                        <input type="number" step="0.1" name="weight_kg" value="{{ profile.weight_kg if profile else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Target Weight (kg)</label>
+                        <input type="number" step="0.1" name="target_weight_kg" value="{{ profile.target_weight_kg if profile else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Activity Level</label>
+                        <select name="activity_level">
+                            <option value="">Select</option>
+                            {% for option in ["Sedentary", "Lightly Active", "Moderately Active", "Highly Active"] %}
+                                <option value="{{ option }}" {% if profile and profile.activity_level == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Primary Wellness Goal</label>
+                        <select name="wellness_goal">
+                            <option value="">Select</option>
+                            {% for option in ["Weight Loss", "Fitness", "Better Sleep", "Stress Reduction", "Habit Building"] %}
+                                <option value="{{ option }}" {% if profile and profile.wellness_goal == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Sleep Goal (hours)</label>
+                        <input type="number" step="0.1" name="sleep_goal_hours" value="{{ profile.sleep_goal_hours if profile else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Water Goal (liters)</label>
+                        <input type="number" step="0.1" name="water_goal_liters" value="{{ profile.water_goal_liters if profile else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Steps Goal</label>
+                        <input type="number" name="steps_goal" value="{{ profile.steps_goal if profile else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Exercise Goal (minutes)</label>
+                        <input type="number" name="exercise_goal_minutes" value="{{ profile.exercise_goal_minutes if profile else '' }}">
+                    </div>
+                </div>
+
+                <button class="btn" type="submit">Save Profile</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

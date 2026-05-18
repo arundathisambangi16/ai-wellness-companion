@@ -1,0 +1,42 @@
+
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container" style="max-width: 680px;">
+        <div class="card">
+            <div class="badge">Create your wellness profile</div>
+            <h1>Create Account</h1>
+            <p>Set up your personal workspace so the app can adapt to your goals and habits.</p>
+
+            {% if error %}
+                <div class="message error">{{ error }}</div>
+            {% endif %}
+            {% if success %}
+                <div class="message success">{{ success }}</div>
+            {% endif %}
+
+            <form method="post" action="/register">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="full_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirm_password" required>
+                </div>
+                <button class="btn" type="submit">Register</button>
+            </form>
+            <p style="margin-top: 16px;">Already have an account? <a href="/login">Login here</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}
