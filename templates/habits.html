@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Habit Tracker{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="card">
+            <div class="badge">Consistency system</div>
+            <h1>Habit Tracker</h1>
+            <p>Create daily habits, track completion, and build streaks that surface directly in your dashboard.</p>
+
+            {% if create_success %}
+                <div class="message success">{{ create_success }}</div>
+            {% endif %}
+            {% if create_error %}
+                <div class="message error">{{ create_error }}</div>
+            {% endif %}
+            {% if track_success %}
+                <div class="message success">{{ track_success }}</div>
+            {% endif %}
+
+            <h2>Create New Habit</h2>
+            <form method="post" action="/habits/create">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Habit Name</label>
+                        <input type="text" name="habit_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category">
+                            <option value="">Select</option>
+                            <option value="Sleep">Sleep</option>
+                            <option value="Fitness">Fitness</option>
+                            <option value="Hydration">Hydration</option>
+                            <option value="Nutrition">Nutrition</option>
+                            <option value="Mindfulness">Mindfulness</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Frequency</label>
+                        <select name="target_frequency">
+                            <option value="Daily">Daily</option>
+                            <option value="Weekly">Weekly</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" name="description">
+                    </div>
+                </div>
+                <button class="btn" type="submit">Create Habit</button>
+            </form>
+        </div>
+
+        <div class="grid-4" style="margin-top: 20px;">
+            <div class="kpi">
+                <h3>Active Habits</h3>
+                <p>{{ habit_summary.total_active_habits or 0 }}</p>
+            </div>
+            <div class="kpi">
+                <h3>Completed Logs</h3>
+                <p>{{ habit_summary.total_completed_logs or 0 }}</p>
+            </div>
+            <div class="kpi">
+                <h3>Missed Logs</h3>
+                <p>{{ habit_summary.total_missed_logs or 0 }}</p>
+            </div>
+            <div class="kpi">
+                <h3>Today's Completed</h3>
+                <p>{{ habit_summary.today_completed_habits or 0 }}</p>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>Track Habits for a Selected Date</h2>
+            <form method="get" action="/habits" style="margin-bottom: 16px;">
+                <div class="form-group" style="max-width: 260px;">
+                    <label>Select Date</label>
+                    <input type="date" name="log_date" value="{{ selected_date }}">
+                </div>
+                <button class="btn secondary" type="submit">Load Date</button>
+            </form>
+
+            {% if habits %}
+                <form method="post" action="/habits/track">
+                    <input type="hidden" name="log_date" value="{{ selected_date }}">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Habit</th>
+                                    <th>Category</th>
+                                    <th>Frequency</th>
+                                    <th>Status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for habit in habits %}
+                                {% set current = status_map.get(habit.id) %}
+                                <tr>
+                                    <td>{{ habit.habit_name }}</td>
+                                    <td>{{ habit.category or '-' }}</td>
+                                    <td>{{ habit.target_frequency or '-' }}</td>
+                                    <td>
+                                        <select name="status_{{ habit.id }}">
+                                            <option value="completed" {% if current and current.status == 'completed' %}selected{% endif %}>Completed</option>
+                                            <option value="partial" {% if current and current.status == 'partial' %}selected{% endif %}>Partial</option>
+                                            <option value="missed" {% if current and current.status == 'missed' %}selected{% endif %}>Missed</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="notes_{{ habit.id }}" value="{{ current.notes if current else '' }}">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn" type="submit">Save Habit Statuses</button>
+                </form>
+            {% else %}
+                <p>No habits created yet. Create your first habit above.</p>
+            {% endif %}
+        </div>
+
+        <div class="grid-2" style="margin-top: 20px;">
+            <div class="card">
+                <h2>Current Streaks</h2>
+                {% if habit_streaks %}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Habit</th>
+                                    <th>Category</th>
+                                    <th>Streak</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in habit_streaks %}
+                                <tr>
+                                    <td>{{ item.habit_name }}</td>
+                                    <td>{{ item.category or '-' }}</td>
+                                    <td>{{ item.streak }} day(s)</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No streak data yet.</p>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h2>Recent Habit Activity</h2>
+                {% if recent_habit_logs %}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Habit</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in recent_habit_logs %}
+                                <tr>
+                                    <td>{{ row.log_date }}</td>
+                                    <td>{{ row.habit_name }}</td>
+                                    <td>{{ row.status }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No habit activity found yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

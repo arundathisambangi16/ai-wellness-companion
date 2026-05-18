@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Wellness Companion{% endblock %}</title>
+    <meta name="description" content="Your personal AI-powered wellness companion — track health, habits, and get personalized coaching.">
+    <meta name="theme-color" content="#07111f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/static/manifest.webmanifest">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="app-shell" data-logged-in="{{ 1 if request.session.get('user_id') else 0 }}" data-user-name="{{ request.session.get('user_name', '') }}">
+
+    <header class="topbar">
+        <div class="container nav">
+            <a class="brand" href="/">
+                <span class="brand-icon">⚡</span>
+                <span>Wellness AI</span>
+            </a>
+
+            {% if request.session.get("user_id") %}
+            <nav class="nav-links" id="nav-links">
+                <a href="/dashboard" class="nav-link">📊 Dashboard</a>
+                <a href="/daily-tracker" class="nav-link">📝 Daily Log</a>
+                <a href="/habits" class="nav-link">🔥 Habits</a>
+                <a href="/report-analyzer" class="nav-link">🔬 Reports</a>
+                <a href="/recovery-planner" class="nav-link">💪 Recovery</a>
+                <a href="/twin-lab" class="nav-link">Twin Lab</a>
+                <a href="/autopilot" class="nav-link">Autopilot</a>
+                <a href="/coach" class="nav-link">🤖 Coach</a>
+                <a href="/profile" class="nav-link">👤 Profile</a>
+                <a href="/logout" class="nav-link nav-logout">Logout</a>
+            </nav>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu" type="button">
+                <span></span><span></span><span></span>
+            </button>
+            {% else %}
+            <nav class="nav-links" id="nav-links">
+                <a href="/login" class="nav-link">Login</a>
+                <a href="/register" class="btn">Get Started Free</a>
+            </nav>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu" type="button">
+                <span></span><span></span><span></span>
+            </button>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="nav-overlay" id="nav-overlay"></div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <span class="brand" style="font-size:15px;">⚡ Wellness AI</span>
+                <span>Your personal health intelligence platform.</span>
+                <span>© 2026 AI Wellness Companion</span>
+            </div>
+        </div>
+    </footer>
+
+    {% if request.session.get("user_id") %}
+    <div class="wellness-widget" id="wellness-widget" aria-hidden="true">
+        <button class="wellness-fab" id="wellness-fab" type="button" aria-label="Open wellness coach">
+            <span>🤖</span>
+        </button>
+        <div class="wellness-panel" id="wellness-panel">
+            <div class="wellness-panel-header">
+                <div>
+                    <strong>Wellness Coach</strong>
+                    <p>Instant guidance based on your data</p>
+                </div>
+                <button class="wellness-close" id="wellness-close" type="button" aria-label="Close coach">&times;</button>
+            </div>
+            <div class="wellness-snapshot" id="wellness-snapshot">
+                <span class="small-muted">Loading your wellness context...</span>
+            </div>
+            <div class="wellness-messages" id="wellness-messages"></div>
+            <div class="wellness-quick-grid" aria-label="Quick prompts">
+                <button class="coach-quick-btn compact" type="button" data-coach-prompt="How is my sleep based on my latest data?">Sleep</button>
+                <button class="coach-quick-btn compact" type="button" data-coach-prompt="How is my hydration compared with my goal?">Hydration</button>
+                <button class="coach-quick-btn compact" type="button" data-coach-prompt="What should I improve most today based on my wellness score?">Focus today</button>
+                <button class="coach-quick-btn compact" type="button" data-coach-prompt="How is my heart health from the wellness data you have?">Heart health</button>
+            </div>
+            <form class="wellness-form" id="wellness-form">
+                <input type="hidden" id="wellness-session-id" value="">
+                <textarea id="wellness-input" rows="2" placeholder="Ask about sleep, hydration, habits..."></textarea>
+                <div class="coach-actions">
+                    <button class="btn" type="submit">Send</button>
+                    <button class="btn secondary" type="button" id="wellness-new-session">New Chat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Toast notification container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app.js" defer></script>
+    <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/static/sw.js").catch(() => {});
+      });
+    }
+    // Highlight active nav link
+    document.addEventListener("DOMContentLoaded", function() {
+        const path = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href !== '/' && path.startsWith(href)) {
+                link.classList.add('active');
+            } else if (href === '/' && path === '/') {
+                link.classList.add('active');
+            }
+        });
+    });
+    </script>
+</body>
+</html>

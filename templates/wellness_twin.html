@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Wellness Twin Lab - AI Wellness Companion{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container twin-shell" id="twin-lab">
+        <script>
+            window.__twinPayload = {{ twin_payload | tojson }};
+        </script>
+
+        <div class="card twin-hero">
+            <div class="twin-hero-copy">
+                <div class="section-label">Wellness Twin Lab</div>
+                <h1>Your data, but with one future changed</h1>
+                <p class="lead">
+                    The twin only becomes active after at least one full week of tracking. Until then, it stays locked so the forecast does not pretend to know more than the data can support.
+                </p>
+                {% if not twin_payload.is_ready %}
+                <div class="lock-callout">
+                    <strong>Locked until 7 days of tracking are available.</strong>
+                    <p>{{ twin_payload.lock_message }}</p>
+                    <div class="lock-progress">
+                        <div class="lock-progress-bar" style="width: {{ twin_payload.snapshot.tracking_progress_pct|round|int }}%;"></div>
+                    </div>
+                    <span class="small-muted">{{ twin_payload.snapshot.tracking_days }} / {{ twin_payload.snapshot.days_required }} tracking days completed</span>
+                </div>
+                {% endif %}
+                <div class="twin-badges">
+                    <span class="twin-badge">Confidence: <strong>{% if twin_payload.is_ready %}{{ twin_payload.simulation.confidence|round|int }}%{% else %}Locked{% endif %}</strong></span>
+                    <span class="twin-badge">Trend: <strong>{{ twin_payload.snapshot.data_strength.trend_label }}</strong></span>
+                    <span class="twin-badge">Focus habit: <strong>{{ twin_payload.snapshot.focus_habit or "None yet" }}</strong></span>
+                </div>
+            </div>
+            <div class="twin-score-card">
+                <div class="score-ring-wrap twin-score-ring">
+                    <svg viewBox="0 0 120 120" class="score-ring-svg">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(124,218,255,0.12)" stroke-width="8"></circle>
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="url(#twinGrad)" stroke-width="8"
+                            stroke-dasharray="314.16"
+                            stroke-dashoffset="{% if twin_payload.is_ready %}{{ 314.16 * (1 - twin_payload.simulation.projected.total_score / 100) | round(2) }}{% else %}314.16{% endif %}"
+                            stroke-linecap="round" transform="rotate(-90 60 60)" class="score-ring-progress"></circle>
+                        <defs>
+                            <linearGradient id="twinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#7cdaff"></stop>
+                                <stop offset="100%" stop-color="#59f0b6"></stop>
+                            </linearGradient>
+                        </defs>
+                        <text x="60" y="57" text-anchor="middle" fill="white" font-size="24" font-weight="900" id="twin-project-score">{% if twin_payload.is_ready %}{{ twin_payload.simulation.projected.total_score|round|int }}{% else %}--{% endif %}</text>
+                        <text x="60" y="72" text-anchor="middle" fill="#a8b4c7" font-size="8.5" font-weight="700">PROJECTED</text>
+                    </svg>
+                </div>
+                <div class="twin-score-meta">
+                    <span>Baseline: <strong id="twin-baseline-score">{% if twin_payload.is_ready %}{{ twin_payload.simulation.baseline.total_score|round|int }}{% else %}--{% endif %}</strong></span>
+                    <span>Change: <strong id="twin-score-delta">{% if twin_payload.is_ready %}{% if twin_payload.simulation.delta.total_score >= 0 %}+{% endif %}{{ twin_payload.simulation.delta.total_score|round(1) }}{% else %}Locked{% endif %}</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="twin-grid">
+            <div class="card twin-controls-card">
+                <div class="section-label">Scenario builder</div>
+                <h2>Shape the next seven days</h2>
+                <p class="small-muted">The twin will unlock after a full week of tracking.</p>
+                {% if not twin_payload.is_ready %}
+                <div class="lock-banner">The simulator is disabled until enough tracking history exists.</div>
+                {% endif %}
+
+                <div class="twin-preset-row" role="tablist" aria-label="Scenario presets">
+                    <button type="button" class="twin-preset active" data-twin-preset="stability" {% if not twin_payload.is_ready %}disabled{% endif %}>Stability</button>
+                    <button type="button" class="twin-preset" data-twin-preset="recovery" {% if not twin_payload.is_ready %}disabled{% endif %}>Recovery</button>
+                    <button type="button" class="twin-preset" data-twin-preset="momentum" {% if not twin_payload.is_ready %}disabled{% endif %}>Momentum</button>
+                    <button type="button" class="twin-preset" data-twin-preset="performance" {% if not twin_payload.is_ready %}disabled{% endif %}>Performance</button>
+                </div>
+
+                <div class="twin-controls">
+                    <label class="twin-control">
+                        <div class="twin-control-head">
+                            <span>Sleep tonight</span>
+                            <strong data-twin-value="sleep_hours">{{ twin_payload.controls.sleep_hours }}</strong>
+                        </div>
+                        <input type="range" min="4" max="10" step="0.25" value="{{ twin_payload.controls.sleep_hours }}" data-twin-control="sleep_hours" {% if not twin_payload.is_ready %}disabled{% endif %}>
+                    </label>
+
+                    <label class="twin-control">
+                        <div class="twin-control-head">
+                            <span>Water target</span>
+                            <strong data-twin-value="water_liters">{{ twin_payload.controls.water_liters }}</strong>
+                        </div>
+                        <input type="range" min="1" max="5" step="0.1" value="{{ twin_payload.controls.water_liters }}" data-twin-control="water_liters" {% if not twin_payload.is_ready %}disabled{% endif %}>
+                    </label>
+
+                    <label class="twin-control">
+                        <div class="twin-control-head">
+                            <span>Steps target</span>
+                            <strong data-twin-value="steps_count">{{ twin_payload.controls.steps_count }}</strong>
+                        </div>
+                        <input type="range" min="2000" max="15000" step="250" value="{{ twin_payload.controls.steps_count }}" data-twin-control="steps_count" {% if not twin_payload.is_ready %}disabled{% endif %}>
+                    </label>
+
+                    <label class="twin-control">
+                        <div class="twin-control-head">
+                            <span>Exercise minutes</span>
+                            <strong data-twin-value="exercise_minutes">{{ twin_payload.controls.exercise_minutes }}</strong>
+                        </div>
+                        <input type="range" min="0" max="90" step="5" value="{{ twin_payload.controls.exercise_minutes }}" data-twin-control="exercise_minutes" {% if not twin_payload.is_ready %}disabled{% endif %}>
+                    </label>
+
+                    <label class="twin-control">
+                        <div class="twin-control-head">
+                            <span>Recovery minutes</span>
+                            <strong data-twin-value="stress_minutes">{{ twin_payload.controls.stress_minutes }}</strong>
+                        </div>
+                        <input type="range" min="0" max="45" step="5" value="{{ twin_payload.controls.stress_minutes }}" data-twin-control="stress_minutes" {% if not twin_payload.is_ready %}disabled{% endif %}>
+                    </label>
+
+                    <label class="twin-control">
+                        <div class="twin-control-head">
+                            <span>Habit follow-through</span>
+                            <strong data-twin-value="habit_completion_pct">{{ twin_payload.controls.habit_completion_pct }}%</strong>
+                        </div>
+                        <input type="range" min="0" max="100" step="5" value="{{ twin_payload.controls.habit_completion_pct }}" data-twin-control="habit_completion_pct" {% if not twin_payload.is_ready %}disabled{% endif %}>
+                    </label>
+                </div>
+
+                <div class="twin-action-row">
+                    <button class="btn" type="button" id="twin-recompute" {% if not twin_payload.is_ready %}disabled{% endif %}>Recompute twin</button>
+                    <span class="small-muted" id="twin-status">{% if twin_payload.is_ready %}Ready to simulate{% else %}Locked until 7 days of tracking{% endif %}</span>
+                </div>
+            </div>
+
+            <div class="card twin-results-card">
+                <div class="section-label">Projection</div>
+                <h2>What the twin sees</h2>
+                {% if twin_payload.is_ready %}
+                <div class="twin-stat-grid">
+                    <div class="twin-stat">
+                        <span>Current score</span>
+                        <strong id="twin-current-score">{{ twin_payload.simulation.baseline.total_score|round|int }}</strong>
+                    </div>
+                    <div class="twin-stat">
+                        <span>Projected score</span>
+                        <strong id="twin-score-target">{{ twin_payload.simulation.projected.total_score|round|int }}</strong>
+                    </div>
+                    <div class="twin-stat">
+                        <span>Score change</span>
+                        <strong id="twin-score-change">{% if twin_payload.simulation.delta.total_score >= 0 %}+{% endif %}{{ twin_payload.simulation.delta.total_score|round(1) }}</strong>
+                    </div>
+                    <div class="twin-stat">
+                        <span>Best lever</span>
+                        <strong id="twin-best-lever">{{ twin_payload.simulation.best_lever.title }}</strong>
+                    </div>
+                </div>
+
+                <div class="twin-insight-grid" id="twin-insight-grid">
+                    {% for item in twin_payload.simulation.opportunities[:2] %}
+                    <div class="twin-insight-card positive">
+                        <span>Opportunity</span>
+                        <strong>{{ item }}</strong>
+                    </div>
+                    {% endfor %}
+                    {% for item in twin_payload.simulation.risk_notes[:2] %}
+                    <div class="twin-insight-card warning">
+                        <span>Risk</span>
+                        <strong>{{ item }}</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="twin-voice" id="twin-narrative">{{ twin_payload.simulation.narrative }}</div>
+                {% else %}
+                <div class="twin-locked-state">
+                    <strong>Not enough history yet.</strong>
+                    <p>The twin starts behaving like a real forecast only after one week of daily tracking.</p>
+                    <div class="twin-locked-metrics">
+                        <div><span>Completed days</span><strong>{{ twin_payload.snapshot.tracking_days }}</strong></div>
+                        <div><span>Required days</span><strong>{{ twin_payload.snapshot.days_required }}</strong></div>
+                        <div><span>Progress</span><strong>{{ twin_payload.snapshot.tracking_progress_pct|round|int }}%</strong></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:18px;">
+            <div class="card">
+                <div class="section-label">Seven-day shape</div>
+                <h2>Projected wellness curve</h2>
+                {% if twin_payload.is_ready %}
+                <div class="twin-forecast" id="twin-forecast">
+                    {% for point in twin_payload.simulation.forecast %}
+                    <div class="twin-forecast-row">
+                        <span class="twin-forecast-label">{{ point.label }}</span>
+                        <div class="twin-forecast-bar">
+                            <div class="twin-forecast-fill" style="width: {{ point.projected_score }}%;"></div>
+                        </div>
+                        <strong>{{ point.projected_score|round|int }}</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="twin-locked-curve">
+                    <p>The forecast curve will appear after a full week of logs.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <div class="section-label">Data grounding</div>
+                <h2>Why the twin trusts this estimate</h2>
+                <div class="twin-data-grid">
+                    <div class="twin-data-item">
+                        <span>Logs used</span>
+                        <strong>{{ twin_payload.snapshot.data_strength.logs_count }}</strong>
+                    </div>
+                    <div class="twin-data-item">
+                        <span>Habits used</span>
+                        <strong>{{ twin_payload.snapshot.data_strength.habits_count }}</strong>
+                    </div>
+                    <div class="twin-data-item">
+                        <span>Report metrics</span>
+                        <strong>{{ twin_payload.snapshot.data_strength.report_metric_count }}</strong>
+                    </div>
+                    <div class="twin-data-item">
+                        <span>Profile completeness</span>
+                        <strong>{{ twin_payload.snapshot.data_strength.profile_completion|round|int }}%</strong>
+                    </div>
+                </div>
+                <p class="small-muted" style="margin-top: 14px;">
+                    The twin blends your profile, recent logs, habits, report metrics, and recovery history to estimate the next seven days.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

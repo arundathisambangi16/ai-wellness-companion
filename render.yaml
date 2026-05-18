@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: ai-wellness-companion
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: wellness-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5-mini
+      - key: SESSION_SECRET_KEY
+        generateValue: true
+      - key: WELLNESS_DB_PATH
+        value: /var/data/database/wellness_app.db
+      - key: WELLNESS_UPLOAD_DIR
+        value: /var/data/uploads/reports
+      - key: ALLOW_EXAMPLE_ENV
+        value: "0"

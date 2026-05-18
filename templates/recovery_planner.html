@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Recovery Planner{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="dashboard-header">
+                <div>
+                    <div class="badge">Adaptive recovery</div>
+                    <h1>Daily Recovery Planner</h1>
+                    <p>Generate a refined daily plan based on your score trends, habits, profile targets, and report data.</p>
+                </div>
+                <div>
+                    <form method="post" action="/recovery-planner">
+                        <input type="hidden" name="plan_date" value="{{ today }}">
+                        <button class="btn" type="submit">Generate Today's Plan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if success %}
+        <div class="message success">{{ success }}</div>
+        {% endif %}
+        {% if error %}
+        <div class="message error">{{ error }}</div>
+        {% endif %}
+
+        {% if plan %}
+        <div class="card" style="margin-bottom: 20px;">
+            <h2>Your Plan for {{ plan.plan_date }}</h2>
+            <p class="small-muted" style="margin-bottom: 20px;">{{ plan.generated_reason }}</p>
+
+            <div class="grid-4">
+                <div class="kpi">
+                    <h3>Sleep Target</h3>
+                    <p>{{ plan.sleep_target_hours }} hrs</p>
+                </div>
+                <div class="kpi">
+                    <h3>Water Target</h3>
+                    <p>{{ plan.water_target_liters }} L</p>
+                </div>
+                <div class="kpi">
+                    <h3>Exercise Target</h3>
+                    <p>{{ plan.exercise_target_minutes }} min</p>
+                </div>
+                <div class="kpi">
+                    <h3>Steps Target</h3>
+                    <p>{{ plan.steps_target }}</p>
+                </div>
+            </div>
+
+            <div class="grid-3" style="margin-top: 20px;">
+                {% if plan.focus_habit %}
+                <div class="card" style="background: #f0fdf4; border-color: #bbf7d0;">
+                    <h3 style="margin-top: 0; color: #166534;">Focus Habit Today</h3>
+                    <p style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">{{ plan.focus_habit }}</p>
+                    <p class="small-muted">This habit has the lowest current streak. Completing it today helps rebuild your consistency score.</p>
+                </div>
+                {% else %}
+                <div class="card" style="background: #f0fdf4; border-color: #bbf7d0;">
+                    <h3 style="margin-top: 0; color: #166534;">Focus Habit Today</h3>
+                    <p class="small-muted">No habits have been created yet. <a href="/habits">Add your first habit</a> to unlock focus habit recommendations.</p>
+                </div>
+                {% endif %}
+
+                <div class="card" style="background: #fff7ed; border-color: #fed7aa;">
+                    <h3 style="margin-top: 0; color: #9a3412;">Meal Guidance</h3>
+                    <p>{{ plan.meal_guidance }}</p>
+                </div>
+
+                <div class="card" style="background: #eef2ff; border-color: #c7d2fe;">
+                    <h3 style="margin-top: 0; color: #3730a3;">Motivation</h3>
+                    <p>{{ plan.motivational_note }}</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <a class="btn secondary" href="/daily-tracker">Log Today's Activity</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="card" style="margin-bottom: 20px; text-align: center; padding: 40px;">
+            <h2>No plan generated yet for today</h2>
+            <p>Click the button above to generate your personalized recovery plan for {{ today }}.</p>
+            <p class="small-muted">Plans are based on your wellness scores, habit streaks, and any uploaded health report metrics.</p>
+        </div>
+        {% endif %}
+
+        {% if recent_plans %}
+        <div class="card">
+            <h2>Recent Recovery Plans</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Sleep Target</th>
+                            <th>Water Target</th>
+                            <th>Exercise</th>
+                            <th>Steps</th>
+                            <th>Focus Habit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in recent_plans %}
+                        <tr>
+                            <td>{{ p.plan_date }}</td>
+                            <td>{{ p.sleep_target_hours }} hrs</td>
+                            <td>{{ p.water_target_liters }} L</td>
+                            <td>{{ p.exercise_target_minutes }} min</td>
+                            <td>{{ p.steps_target }}</td>
+                            <td>{{ p.focus_habit or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}

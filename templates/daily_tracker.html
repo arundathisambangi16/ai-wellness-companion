@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Daily Tracker{% endblock %}
+{% block content %}
+<section class="page-section">
+    <div class="container">
+        <div class="card">
+            <div class="badge">Daily signal capture</div>
+            <h1>Daily Wellness Tracker</h1>
+            <p>Track the metrics that matter and instantly refresh your score, insights, and recommendations.</p>
+
+            {% if success %}
+                <div class="message success">{{ success }}</div>
+            {% endif %}
+
+            <form method="post" action="/daily-tracker">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Log Date</label>
+                        <input type="date" name="log_date" value="{{ selected_date }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mood</label>
+                        <select name="mood">
+                            <option value="">Select</option>
+                            {% for option in ["Happy", "Good", "Calm", "Neutral", "Tired", "Stressed", "Anxious", "Sad"] %}
+                                <option value="{{ option }}" {% if daily_log and daily_log.mood == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Sleep Hours</label>
+                        <input type="number" step="0.1" name="sleep_hours" value="{{ daily_log.sleep_hours if daily_log else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Water Intake (liters)</label>
+                        <input type="number" step="0.1" name="water_intake_liters" value="{{ daily_log.water_intake_liters if daily_log else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Steps Count</label>
+                        <input type="number" name="steps_count" value="{{ daily_log.steps_count if daily_log else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Exercise Minutes</label>
+                        <input type="number" name="exercise_minutes" value="{{ daily_log.exercise_minutes if daily_log else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Calories Burned</label>
+                        <input type="number" step="0.1" name="calories_burned" value="{{ daily_log.calories_burned if daily_log else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Stress Level (1 to 10)</label>
+                        <input type="number" min="1" max="10" name="stress_level" value="{{ daily_log.stress_level if daily_log else '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="4">{{ daily_log.notes if daily_log else '' }}</textarea>
+                </div>
+
+                <button class="btn" type="submit">Save Daily Log</button>
+            </form>
+        </div>
+
+        {% if score_data %}
+        <div class="grid-3" style="margin-top: 20px;">
+            <div class="card score-highlight">
+                <h2>Daily Wellness Score</h2>
+                <div class="score-number">{{ score_data.total_score|round|int }}/100</div>
+                <p>{{ score_data.explanation_summary }}</p>
+            </div>
+            <div class="card">
+                <h2>Component Scores</h2>
+                <div class="score-list">
+                    <div><span>Sleep</span><strong>{{ score_data.sleep_score|round|int }}</strong></div>
+                    <div><span>Hydration</span><strong>{{ score_data.hydration_score|round|int }}</strong></div>
+                    <div><span>Activity</span><strong>{{ score_data.activity_score|round|int }}</strong></div>
+                    <div><span>Habits</span><strong>{{ score_data.habit_score|round|int }}</strong></div>
+                    <div><span>Mood</span><strong>{{ score_data.mood_score|round|int }}</strong></div>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Personalized Insights</h2>
+                {% if recommendations %}
+                    <ul class="insight-list">
+                        {% for rec in recommendations %}
+                        <li>
+                            <strong>{{ rec.priority_level|title }}</strong> - {{ rec.content }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Save a daily log to generate recommendations.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>Recent Daily Logs</h2>
+            {% if recent_logs %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Sleep</th>
+                                <th>Water</th>
+                                <th>Steps</th>
+                                <th>Exercise</th>
+                                <th>Mood</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                            <tr>
+                                <td><a href="/daily-tracker?log_date={{ log.log_date }}">{{ log.log_date }}</a></td>
+                                <td>{{ log.sleep_hours or "-" }}</td>
+                                <td>{{ log.water_intake_liters or "-" }}</td>
+                                <td>{{ log.steps_count or "-" }}</td>
+                                <td>{{ log.exercise_minutes or "-" }}</td>
+                                <td>{{ log.mood or "-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No daily logs found yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
